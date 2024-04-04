@@ -31,10 +31,12 @@ mod tests {
     #[test]
     fn bocchi_shut_up_test_when_10() {
         assert_eq!(bocchi_shut_up(1, &[11, 12, 13], 3), 10);
+        assert_eq!(bocchi_shut_up(2, &[21, 22, 23], 3), 10);
     }
 
     #[test]
     fn bocchi_shut_up_test_when_not_10() {
         assert_eq!(bocchi_shut_up(1, &[11, 12, 12], 3), 12);
+        assert_eq!(bocchi_shut_up(2, &[21, 21, 22], 3), 21);
     }
 }
