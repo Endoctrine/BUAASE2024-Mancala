@@ -1,3 +1,6 @@
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
 pub fn mancala_result(flag: i32, seq: &[i32], size: i32) -> i32 {
     let mut game_situation = GameSituation::new(flag);
     for i in 0..size {
