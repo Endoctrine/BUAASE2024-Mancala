@@ -10,8 +10,6 @@ pub fn mancala_result(flag: i32, seq: &[i32], size: i32) -> i32 {
             }
             _ => {}
         }
-        // println!("step {i} action {} :", seq[i as usize]);
-        // game_situation.log();
     }
 
     if game_situation.ended {
@@ -33,8 +31,8 @@ pub fn mancala_result(flag: i32, seq: &[i32], size: i32) -> i32 {
 
 const HOLE_NUMBER: usize = 14;
 
-struct GameSituation {
-    actor: i32,
+pub struct GameSituation {
+    pub actor: i32,
     board: [i32; HOLE_NUMBER],
     ended: bool,
 }
@@ -48,7 +46,7 @@ const NOT_ENDED: i32 = 20000;
 const ILLEGAL: i32 = 30000;
 
 impl GameSituation {
-    fn new(first_actor: i32) -> GameSituation {
+    pub fn new(first_actor: i32) -> GameSituation {
         let mut situation = GameSituation {
             actor: first_actor,
             board: [4; HOLE_NUMBER],
@@ -61,7 +59,7 @@ impl GameSituation {
         situation
     }
 
-    fn act(&mut self, action: i32) -> i32 {
+    pub fn act(&mut self, action: i32) -> i32 {
         let actor = action / 10;
         let hole_index = (action % 10 + (actor - 1) * 7 - 1) as usize;
 
@@ -116,19 +114,6 @@ impl GameSituation {
             NOT_ENDED
         }
     }
-
-    // fn log(&self) {
-    //     for i in 0..7 {
-    //         print!("|{}\t", self.board[13 - i]);
-    //     }
-    //     println!("|");
-    //     print!("\t");
-    //     for i in 0..7 {
-    //         print!("|{}\t", self.board[i]);
-    //     }
-    //     println!("|");
-    //     println!();
-    // }
 
     fn next_hole(hole_index: usize) -> usize {
         (hole_index + 1usize) % HOLE_NUMBER
@@ -227,6 +212,24 @@ mod tests {
             26, 12, 25, 11, 26,
             11
         ], 21), ILLEGAL + 20);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 11
+        ], 3), ILLEGAL + 2);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 12
+        ], 3), ILLEGAL + 2);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 23, 26, 21
+        ], 5), ILLEGAL + 4);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 23, 26, 11,
+            25, 12, 26, 21, 13,
+            14, 22, 12, 21, 11,
+            23, 24, 16, 23
+        ], 19), ILLEGAL + 18);
+        assert_eq!(mancala_result(2, &[
+            13
+        ], 1), ILLEGAL + 0);
     }
 
     #[test]
@@ -237,6 +240,22 @@ mod tests {
             23, 12, 24, 13, 11,
             26, 12, 25, 11, 26
         ], 20), ENDED + 16);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 23, 26, 11,
+            25, 12, 26, 21, 13,
+            14, 22, 12, 21, 11,
+            23, 24, 16
+        ], 18), ENDED - 2);
+        assert_eq!(mancala_result(2, &[
+            21, 15, 22, 13, 15,
+            23, 14, 24, 14, 25,
+            14, 21, 12, 23, 14,
+            22, 15, 26, 13, 25,
+            12, 23, 14, 21, 15,
+            16, 13, 24, 25, 16,
+            14, 23, 15, 16, 11,
+            22
+        ], 36), ENDED + 12);
     }
 
     #[test]
@@ -250,16 +269,20 @@ mod tests {
         assert_eq!(mancala_result(1, &[
             11, 21, 12, 13, 25
         ], 5), NOT_ENDED + 2);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 23, 26
+        ], 4), NOT_ENDED + 1);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 23, 26, 11,
+            25, 12, 26, 21, 13,
+            14, 22, 12, 21, 11,
+            23
+        ], 16), NOT_ENDED + 17);
+        assert_eq!(mancala_result(1, &[
+            13, 11, 23, 26, 11,
+            25, 12, 26, 21, 13,
+            14, 22, 12, 21, 11,
+            23, 24
+        ], 17), NOT_ENDED + 17);
     }
-
-    // #[test]
-    // fn test_manually() {
-    //     let seq = [
-    //         11, 21, 12, 13, 25,
-    //         11, 21, 12, 22, 11,
-    //         23, 12, 24, 13, 11,
-    //         26, 12, 25, 11, 26
-    //     ];
-    //     println!("{}", mancala_result(1, &seq, seq.len() as i32));
-    // }
 }
