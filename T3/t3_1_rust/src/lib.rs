@@ -1,40 +1,43 @@
 use wasm_bindgen::prelude::wasm_bindgen;
+use js_sys::Int32Array;
 
 #[wasm_bindgen]
 pub fn mancala_board(flag: i32, seq: &[i32], size: i32) -> i32 {
     let mut game_situation = GameSituation::new(seq[0] / 10);
-
-    todo!()
-}
-
-
-pub fn mancala_result(flag: i32, seq: &[i32], size: i32) -> i32 {
-    let mut game_situation = GameSituation::new(flag);
-    for i in 0..size {
-        match game_situation.act(seq[i as usize]) {
-            ILLEGAL => {
-                return ILLEGAL + i;
+    for i in 0..size - 1 {
+        game_situation.act(seq[i as usize]);
+    }
+    match game_situation.act(seq[(size - 1) as usize]) {
+        ILLEGAL => {
+            let mut tmp = [0; 15];
+            for i in 0..14 {
+                tmp[i] = game_situation.board[i];
             }
-            _ => {}
+            if flag == 1 {
+                tmp[14] = 200 + 2 * game_situation.board[PLAYER_1_SCORE_HOLE] - 48;
+            } else {
+                tmp[14] = 200 - 2 * game_situation.board[PLAYER_2_SCORE_HOLE] + 48;
+            }
+            return tmp[14];
+            // return Int32Array::from(&tmp[..]);
         }
-    }
+        _ => {
+            let mut tmp = [0; 15];
+            for i in 0..14 {
+                tmp[i] = game_situation.board[i];
+            }
 
-    if game_situation.ended {
-        if flag == 1 {
-            ENDED + game_situation.board[PLAYER_1_SCORE_HOLE] -
-                game_situation.board[PLAYER_2_SCORE_HOLE]
-        } else {
-            ENDED + game_situation.board[PLAYER_2_SCORE_HOLE] -
-                game_situation.board[PLAYER_1_SCORE_HOLE]
-        }
-    } else {
-        if flag == 1 {
-            NOT_ENDED + game_situation.board[PLAYER_1_SCORE_HOLE]
-        } else {
-            NOT_ENDED + game_situation.board[PLAYER_2_SCORE_HOLE]
+            if game_situation.ended {
+                tmp[14] = 200 + game_situation.board[PLAYER_1_SCORE_HOLE] - game_situation.board[PLAYER_2_SCORE_HOLE];
+            } else {
+                tmp[14] = game_situation.actor;
+            }
+            return tmp[14];
+            // return Int32Array::from(&tmp[..]);
         }
     }
 }
+
 
 const HOLE_NUMBER: usize = 14;
 
@@ -200,60 +203,29 @@ mod tests {
 
     #[test]
     fn test_case_illegal() {
-        assert_eq!(mancala_result(1, &[11, 12], 2), ILLEGAL + 1);
-        assert_eq!(mancala_result(1, &[
-            11, 22, 12, 13, 21,
-            14, 22, 16, 23, 15,
-            23, 14, 22
-        ], 13), ILLEGAL + 12);
-        assert_eq!(mancala_result(1, &[
-            11, 22, 12, 13, 21,
-            14, 22, 16, 23, 15,
-            23, 14, 21, 13, 24,
-            16, 15, 25, 16, 15
-        ], 20), ILLEGAL + 16);
-        assert_eq!(mancala_result(1, &[
+        assert_eq!(mancala_board(1, &[
             11, 21, 12, 13, 25,
             11, 21, 12, 22, 11,
             23, 12, 24, 13, 11,
-            26, 12, 25, 11, 26,
-            11
-        ], 21), ILLEGAL + 20);
-        assert_eq!(mancala_result(1, &[
-            13, 11, 11
-        ], 3), ILLEGAL + 2);
-        assert_eq!(mancala_result(1, &[
-            13, 11, 12
-        ], 3), ILLEGAL + 2);
-        assert_eq!(mancala_result(1, &[
-            13, 11, 23, 26, 21
-        ], 5), ILLEGAL + 4);
-        assert_eq!(mancala_result(1, &[
-            13, 11, 23, 26, 11,
-            25, 12, 26, 21, 13,
-            14, 22, 12, 21, 11,
-            23, 24, 16, 23
-        ], 19), ILLEGAL + 18);
-        assert_eq!(mancala_result(2, &[
-            13
-        ], 1), ILLEGAL + 0);
+            26, 12, 25, 12
+        ], 19), 200 + 3 * 2 - 48);
     }
 
     #[test]
     fn test_case_ended() {
-        assert_eq!(mancala_result(1, &[
+        assert_eq!(mancala_board(2, &[
             11, 21, 12, 13, 25,
             11, 21, 12, 22, 11,
             23, 12, 24, 13, 11,
             26, 12, 25, 11, 26
-        ], 20), ENDED + 16);
-        assert_eq!(mancala_result(1, &[
+        ], 20), 200 + 16);
+        assert_eq!(mancala_board(1, &[
             13, 11, 23, 26, 11,
             25, 12, 26, 21, 13,
             14, 22, 12, 21, 11,
             23, 24, 16
-        ], 18), ENDED - 2);
-        assert_eq!(mancala_result(2, &[
+        ], 18), 200 - 2);
+        assert_eq!(mancala_board(2, &[
             21, 15, 22, 13, 15,
             23, 14, 24, 14, 25,
             14, 21, 12, 23, 14,
@@ -262,34 +234,31 @@ mod tests {
             16, 13, 24, 25, 16,
             14, 23, 15, 16, 11,
             22
-        ], 36), ENDED + 12);
+        ], 36), 200 - 12);
     }
 
     #[test]
     fn test_case_not_ended() {
-        assert_eq!(mancala_result(1, &[11, 22], 2), NOT_ENDED + 0);
-        assert_eq!(mancala_result(1, &[11, 22, 12, 13], 4), NOT_ENDED + 2);
-        assert_eq!(mancala_result(1, &[
-            11, 22, 12, 13, 21, 14,
-            22, 16, 23, 15, 23, 14
-        ], 12), NOT_ENDED + 8);
-        assert_eq!(mancala_result(1, &[
-            11, 21, 12, 13, 25
-        ], 5), NOT_ENDED + 2);
-        assert_eq!(mancala_result(1, &[
-            13, 11, 23, 26
-        ], 4), NOT_ENDED + 1);
-        assert_eq!(mancala_result(1, &[
-            13, 11, 23, 26, 11,
-            25, 12, 26, 21, 13,
-            14, 22, 12, 21, 11,
-            23
-        ], 16), NOT_ENDED + 17);
-        assert_eq!(mancala_result(1, &[
+        assert_eq!(mancala_board(1, &[
+            11, 21, 12, 13, 25,
+            11, 21, 12, 22, 11,
+            23, 12, 24, 13, 11,
+            26, 12, 25, 11
+        ], 19), 2);
+        assert_eq!(mancala_board(2, &[
             13, 11, 23, 26, 11,
             25, 12, 26, 21, 13,
             14, 22, 12, 21, 11,
             23, 24
-        ], 17), NOT_ENDED + 17);
+        ], 17), 1);
+        assert_eq!(mancala_board(1, &[
+            21, 15, 22, 13, 15,
+            23, 14, 24, 14, 25,
+            14, 21, 12, 23, 14,
+            22, 15, 26, 13, 25,
+            12, 23, 14, 21, 15,
+            16, 13, 24, 25, 16,
+            14, 23, 15, 16, 11
+        ], 35), 2);
     }
 }
